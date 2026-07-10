@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MikroTik Fleet Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0b0f17;
+  --surface:   #111827;
+  --surface2:  #1a2233;
+  --surface3:  #202d42;
+  --border:    #1f2d40;
+  --border2:   #2a3f58;
+  --accent:    #3b82f6;
+  --accent-h:  #60a5fa;
+  --accent-dim:#1e3a5f;
+  --green:     #10b981;
+  --green-dim: #064e3b;
+  --red:       #ef4444;
+  --red-dim:   #450a0a;
+  --yellow:    #f59e0b;
+  --purple:    #8b5cf6;
+  --cyan:      #06b6d4;
+  --text:      #f1f5f9;
+  --text-2:    #94a3b8;
+  --text-3:    #475569;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --ui:   'Inter', system-ui, sans-serif;
+  --r:    8px;
+  --r-sm: 5px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:13px;display:flex;flex-direction:column;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3);}
+
+/* ── HEADER ── */
+header{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 20px;flex-shrink:0;z-index:10;}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;letter-spacing:-0.4px;color:var(--text);}
+.logo-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 12px rgba(59,130,246,.35);}
+.logo-sub{font-weight:400;color:var(--text-2);font-size:12px;margin-left:2px;}
+.header-pills{display:flex;gap:6px;margin-left:12px;}
+.pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text-2);font-size:11px;padding:3px 10px;font-family:var(--mono);}
+.pill.green{border-color:var(--green);color:var(--green);}
+.pill.blue{border-color:var(--accent);color:var(--accent-h);}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+
+/* ── LANG TOGGLE ── */
+.lang-toggle{display:flex;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);overflow:hidden;}
+.lang-btn{background:none;border:none;color:var(--text-3);cursor:pointer;font-family:var(--ui);font-size:11px;font-weight:600;padding:5px 10px;transition:all .15s;}
+.lang-btn:hover{color:var(--text-2);}
+.lang-btn.active{background:var(--accent-dim);color:var(--accent-h);}
+
+.hdr-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-2);cursor:pointer;font-family:var(--ui);font-size:12px;padding:5px 12px;display:flex;align-items:center;gap:6px;transition:all .15s;}
+.hdr-btn:hover{border-color:var(--accent);color:var(--accent-h);}
+.hdr-btn.active{border-color:var(--accent);color:var(--accent-h);background:var(--accent-dim);}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-columns:300px 1fr;flex:1;overflow:hidden;}
+.app.log-open{height:calc(100vh - 52px - 230px);}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.stab{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-2);cursor:pointer;font-family:var(--ui);font-size:12px;font-weight:500;padding:10px 0;transition:all .15s;}
+.stab:hover{color:var(--text);}
+.stab.active{color:var(--accent-h);border-bottom-color:var(--accent);}
+.sidebar-scroll{overflow-y:auto;flex:1;padding:12px;display:flex;flex-direction:column;gap:12px;}
+
+/* ── FORM ELEMENTS ── */
+.sec{display:flex;flex-direction:column;gap:6px;}
+.sec-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.9px;color:var(--text-3);padding:2px 0;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:11px;color:var(--text-2);}
+input,textarea,select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 9px;outline:none;transition:border-color .15s,box-shadow .15s;}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+input::placeholder,textarea::placeholder{color:var(--text-3);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+textarea.hosts{height:110px;resize:vertical;font-size:11px;line-height:1.8;}
+.host-stat{font-size:11px;color:var(--text-3);text-align:right;font-family:var(--mono);}
+
+/* ── ACTION LIST ── */
+.action-cat{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-3);padding:8px 2px 3px;}
+.action-btn{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text-2);cursor:pointer;padding:8px 10px;text-align:left;font-size:12px;font-family:var(--ui);display:flex;align-items:center;gap:8px;transition:all .12s;width:100%;}
+.action-btn:hover{border-color:var(--border2);color:var(--text);background:var(--surface3);}
+.action-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent-h);}
+.action-icon{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--surface3);flex-shrink:0;}
+.action-btn.active .action-icon{background:rgba(59,130,246,.2);}
+
+/* ── PROTO TOGGLE ── */
+.proto-toggle{display:grid;grid-template-columns:1fr 1fr;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);overflow:hidden;}
+.proto-btn{background:none;border:none;color:var(--text-2);cursor:pointer;font-family:var(--ui);font-size:12px;font-weight:500;padding:7px;transition:all .15s;}
+.proto-btn.active{background:var(--accent);color:#fff;}
+
+.checkbox-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;user-select:none;}
+.checkbox-row input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+.checkbox-row span{font-size:12px;color:var(--text-2);}
+
+/* ── BUTTONS ── */
+.btn-primary{background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;cursor:pointer;font-family:var(--ui);font-size:13px;font-weight:600;padding:9px 18px;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,opacity .15s;width:100%;}
+.btn-primary:hover:not(:disabled){background:var(--accent-h);}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;}
+.btn-primary.green{background:var(--green);}
+.btn-primary.green:hover:not(:disabled){background:#34d399;}
+.btn-ghost{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-2);cursor:pointer;font-family:var(--ui);font-size:12px;padding:7px 12px;transition:all .15s;}
+.btn-ghost:hover{border-color:var(--text-3);color:var(--text);}
+.test-row{display:flex;align-items:center;gap:8px;}
+.test-result{font-size:11px;font-family:var(--mono);}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+
+/* ── CONFIG AREA ── */
+.config-area{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 18px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;}
+.config-header{display:flex;align-items:center;gap:10px;}
+.config-title{font-weight:600;font-size:14px;}
+.config-badge{background:var(--accent-dim);color:var(--accent-h);border:1px solid rgba(59,130,246,.3);border-radius:20px;font-size:10px;font-weight:600;padding:2px 9px;text-transform:uppercase;letter-spacing:.5px;}
+.params-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+.exec-bar{display:flex;align-items:center;gap:8px;}
+.thread-ctl{display:flex;align-items:center;gap:6px;margin-left:auto;color:var(--text-2);font-size:11px;}
+.thread-ctl input{width:48px;text-align:center;}
+.progress-wrap{height:2px;background:var(--border);border-radius:1px;overflow:hidden;display:none;}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--purple));width:0%;transition:width .3s;}
+
+/* ── COMMAND PREVIEW ── */
+.cmd-preview{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-sm);overflow:hidden;}
+.cmd-preview-header{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.cmd-preview-title{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:5px;}
+.cmd-preview-title::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--cyan);}
+.cmd-preview-body{padding:8px 10px;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--cyan);white-space:pre-wrap;max-height:120px;overflow-y:auto;}
+.cmd-placeholder{color:var(--text-3);font-style:italic;}
+
+/* ── STATS ── */
+.stats-bar{background:var(--surface);border-bottom:1px solid var(--border);height:34px;display:none;align-items:center;gap:16px;padding:0 18px;font-size:12px;flex-shrink:0;}
+.stat{display:flex;align-items:center;gap:5px;color:var(--text-2);}
+.stat-val{font-weight:600;font-family:var(--mono);}
+.stat-val.g{color:var(--green);}
+.stat-val.r{color:var(--red);}
+
+/* ── RESULTS ── */
+.results-panel{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:6px;}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-3);}
+.empty-icon{font-size:38px;opacity:.2;}
+.empty-text{font-size:13px;}
+
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;animation:slideIn .18s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.result-card:hover{border-color:var(--border2);}
+.result-header{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;user-select:none;}
+.result-header:hover{background:rgba(255,255,255,.02);}
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dot-ok{background:var(--green);box-shadow:0 0 6px var(--green);}
+.dot-err{background:var(--red);box-shadow:0 0 6px var(--red);}
+.dot-warn{background:var(--yellow);}
+.result-host{font-family:var(--mono);font-size:12px;font-weight:600;}
+.result-sum{font-size:11px;color:var(--text-2);margin-left:auto;max-width:55%;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.result-chev{color:var(--text-3);font-size:10px;transition:transform .18s;margin-left:6px;}
+.result-chev.open{transform:rotate(90deg);}
+.result-body{display:none;border-top:1px solid var(--border);padding:10px 12px;flex-direction:column;gap:6px;}
+.result-body.open{display:flex;}
+.cmd-block{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;}
+.cmd-head{background:var(--surface2);padding:4px 10px;font-family:var(--mono);font-size:10px;color:var(--text-3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:5px;}
+.cmd-dot2{width:5px;height:5px;border-radius:50%;background:var(--accent);}
+.cmd-out{padding:7px 10px;font-family:var(--mono);font-size:11px;line-height:1.6;white-space:pre-wrap;word-break:break-all;}
+.cmd-out.ok{color:var(--green);}
+.cmd-out.err{color:var(--red);}
+.step-list{display:flex;flex-direction:column;gap:3px;}
+.step-item{display:flex;gap:7px;padding:5px 8px;border-radius:var(--r-sm);background:var(--bg);}
+.step-ok .si-icon{color:var(--green);}
+.step-err .si-icon{color:var(--red);}
+.si-icon{font-size:12px;flex-shrink:0;margin-top:1px;}
+.si-body{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+.si-label{font-size:12px;}
+.step-ok .si-label{color:var(--text);}
+.step-err .si-label{color:var(--red);}
+.si-detail{font-size:10px;color:var(--text-2);font-family:var(--mono);word-break:break-all;white-space:pre-wrap;line-height:1.5;}
+.step-err .si-detail{color:rgba(239,68,68,.8);}
+.err-banner{background:var(--red-dim);border:1px solid rgba(239,68,68,.3);border-radius:var(--r-sm);color:var(--red);font-size:11px;font-family:var(--mono);padding:8px 10px;margin-top:4px;white-space:pre-wrap;}
+
+/* ── LIVE LOG ── */
+.log-panel{position:fixed;bottom:0;left:0;right:0;height:230px;background:#060a0f;border-top:1px solid var(--accent);display:flex;flex-direction:column;z-index:100;transform:translateY(100%);transition:transform .22s ease;}
+.log-panel.open{transform:translateY(0);}
+.log-bar{height:32px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 12px;flex-shrink:0;}
+.log-title{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--accent-h);text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:6px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--text-3);}
+.live-dot.on{background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.log-count{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.log-actions2{margin-left:auto;display:flex;gap:5px;}
+.log-btn2{background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text-3);cursor:pointer;font-size:10px;font-family:var(--mono);padding:3px 8px;transition:all .12s;}
+.log-btn2:hover{color:var(--text);border-color:var(--text-3);}
+.log-body{flex:1;overflow-y:auto;padding:6px 12px;font-family:var(--mono);font-size:11px;line-height:1.7;}
+.log-line{display:flex;gap:10px;animation:logIn .12s ease;border-bottom:1px solid rgba(255,255,255,.02);}
+@keyframes logIn{from{opacity:0;transform:translateX(-3px)}to{opacity:1;transform:none}}
+.ll-time{color:#2a3f58;flex-shrink:0;}
+.ll-host{color:#4a90d9;min-width:140px;flex-shrink:0;}
+.ll-msg{flex:1;word-break:break-all;}
+.log-line.ok .ll-msg{color:var(--green);}
+.log-line.err .ll-msg{color:var(--red);}
+.log-line.warn .ll-msg{color:var(--yellow);}
+.log-line.info .ll-msg{color:#7dd3fc;}
+.log-line.dim .ll-msg{color:#475569;}
+
+/* ── AI ASSISTANT ── */
+.ai-panel{display:none;flex-direction:column;height:100%;overflow:hidden;}
+.ai-panel.active{display:flex;}
+
+.ai-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.ai-model-select{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:var(--mono);font-size:12px;padding:5px 8px;cursor:pointer;flex:1;max-width:260px;}
+.ai-key-input{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:var(--mono);font-size:12px;padding:5px 9px;flex:1;}
+.ai-key-input::placeholder{color:var(--text-3);}
+.ai-key-save{background:var(--accent-dim);border:1px solid rgba(59,130,246,.3);border-radius:var(--r-sm);color:var(--accent-h);cursor:pointer;font-size:11px;padding:5px 10px;white-space:nowrap;transition:all .15s;}
+.ai-key-save:hover{background:var(--accent);color:#fff;}
+.ai-key-ok{font-size:11px;color:var(--green);font-family:var(--mono);}
+
+.ai-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.ai-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--text-3);}
+.ai-empty-icon{font-size:42px;opacity:.2;}
+.ai-empty-title{font-size:14px;font-weight:600;color:var(--text-2);}
+.ai-empty-sub{font-size:12px;text-align:center;max-width:340px;line-height:1.6;}
+.ai-suggestions{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px;}
+.ai-suggestion{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;color:var(--text-2);cursor:pointer;font-size:11px;padding:5px 12px;transition:all .15s;}
+.ai-suggestion:hover{border-color:var(--accent);color:var(--accent-h);background:var(--accent-dim);}
+
+.ai-msg{display:flex;gap:10px;max-width:100%;animation:slideIn .18s ease;}
+.ai-msg.user{flex-direction:row-reverse;}
+.ai-avatar{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px;}
+.ai-msg.user .ai-avatar{background:var(--accent-dim);border:1px solid rgba(59,130,246,.3);}
+.ai-msg.assistant .ai-avatar{background:linear-gradient(135deg,var(--purple),var(--accent));box-shadow:0 0 8px rgba(139,92,246,.3);}
+.ai-bubble{max-width:85%;display:flex;flex-direction:column;gap:6px;}
+.ai-msg.user .ai-bubble{align-items:flex-end;}
+.ai-text{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;font-size:13px;line-height:1.6;color:var(--text);}
+.ai-msg.user .ai-text{background:var(--accent-dim);border-color:rgba(59,130,246,.3);color:var(--accent-h);}
+
+/* Code blocks in AI responses */
+.ai-text pre{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;overflow-x:auto;margin:6px 0;}
+.ai-text code{font-family:var(--mono);font-size:11px;color:var(--cyan);}
+.ai-text p{margin-bottom:6px;}
+.ai-text p:last-child{margin-bottom:0;}
+
+.ai-cmd-block{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-sm);overflow:hidden;}
+.ai-cmd-header{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.ai-cmd-label{font-size:10px;font-family:var(--mono);color:var(--cyan);display:flex;align-items:center;gap:5px;}
+.ai-cmd-label::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--cyan);display:inline-block;}
+.ai-cmd-copy{background:none;border:1px solid var(--border2);border-radius:3px;color:var(--text-3);cursor:pointer;font-size:10px;font-family:var(--mono);padding:2px 7px;transition:all .12s;}
+.ai-cmd-copy:hover{color:var(--text);border-color:var(--text-3);}
+.ai-cmd-body{padding:8px 12px;font-family:var(--mono);font-size:11px;color:var(--cyan);white-space:pre-wrap;line-height:1.7;}
+
+.ai-time{font-size:10px;color:var(--text-3);font-family:var(--mono);padding:0 2px;}
+
+.ai-inputbar{background:var(--surface);border-top:1px solid var(--border);padding:12px 16px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
+.ai-textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--ui);font-size:13px;padding:10px 13px;resize:none;outline:none;transition:border-color .15s;min-height:44px;max-height:120px;}
+.ai-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.ai-textarea::placeholder{color:var(--text-3);}
+.ai-send-row{display:flex;align-items:center;gap:8px;}
+.ai-send{background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;cursor:pointer;font-family:var(--ui);font-size:13px;font-weight:600;padding:8px 18px;display:flex;align-items:center;gap:6px;transition:background .15s;}
+.ai-send:hover:not(:disabled){background:var(--accent-h);}
+.ai-send:disabled{opacity:.45;cursor:not-allowed;}
+.ai-clear-chat{background:none;border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;font-size:11px;padding:7px 12px;transition:all .15s;}
+.ai-clear-chat:hover{color:var(--text);border-color:var(--text-3);}
+.ai-model-badge{font-size:10px;color:var(--text-3);font-family:var(--mono);margin-left:auto;}
+.ai-typing{display:flex;gap:4px;padding:4px 2px;}
+.ai-typing span{width:6px;height:6px;border-radius:50%;background:var(--text-3);animation:typing 1.2s infinite;}
+.ai-typing span:nth-child(2){animation-delay:.2s;}
+.ai-typing span:nth-child(3){animation-delay:.4s;}
+@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+
+/* ── SCRIPT DEPLOY ── */
+.script-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .12s;}
+.script-item:hover{border-color:var(--border2);background:var(--surface3);}
+.script-item.active{border-color:var(--accent);background:var(--accent-dim);}
+.script-name{flex:1;font-size:12px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.script-vars{font-size:10px;color:var(--text-3);font-family:var(--mono);}
+.script-del{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:0 2px;transition:color .12s;}
+.script-del:hover{color:var(--red);}
+
+/* ── ROMON ── */
+.neigh-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;cursor:pointer;transition:all .12s;display:flex;flex-direction:column;gap:4px;}
+.neigh-card:hover{border-color:var(--accent);background:var(--accent-dim);}
+.neigh-card.selected{border-color:var(--green);background:var(--green-dim);}
+.neigh-id{font-family:var(--mono);font-size:11px;color:var(--cyan);}
+.neigh-name{font-size:13px;font-weight:600;}
+.neigh-ip{font-family:var(--mono);font-size:11px;color:var(--text-2);}
+
+.rm-device-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:6px;}
+.rm-device-header{display:flex;align-items:center;gap:10px;}
+.rm-device-name{font-size:14px;font-weight:600;}
+.rm-device-meta{font-size:11px;color:var(--text-2);font-family:var(--mono);}
+.rm-use-btn{margin-left:auto;background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;cursor:pointer;font-size:11px;font-weight:600;padding:5px 12px;transition:background .15s;}
+.rm-use-btn:hover{background:var(--accent-h);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">🔧</div>
+    MikroTik Fleet
+    <span class="logo-sub">Manager</span>
+  </div>
+  <div class="header-pills">
+    <span class="pill" id="pillCount">0 devices</span>
+    <span class="pill green">SSH</span>
+  </div>
+  <div class="header-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="langEn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="langBs" onclick="setLang('bs')">BS</button>
+    </div>
+    <button class="hdr-btn" id="btnLogToggle" onclick="toggleLog()">⬛ <span data-i18n="liveLog">Live Log</span></button>
+  </div>
+</header>
+
+<div class="app" id="appGrid">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+    <div class="sidebar-tabs" style="display:grid;grid-template-columns:repeat(5,1fr)">
+      <button class="stab active" id="stabActions" onclick="sideSwitch('actions')" title="Actions">⚡</button>
+      <button class="stab" id="stabExport" onclick="sideSwitch('export')" title="Export">📤</button>
+      <button class="stab" id="stabScript" onclick="sideSwitch('script')" title="Script Deploy">📜</button>
+      <button class="stab" id="stabRomon" onclick="sideSwitch('romon')" title="RoMON">🔗</button>
+      <button class="stab" id="stabAi" onclick="sideSwitch('ai')" title="AI Assistant">🤖</button>
+    </div>
+
+    <!-- ACTIONS TAB -->
+    <div class="sidebar-scroll" id="panelActions">
+      <div class="sec">
+        <div class="sec-label" data-i18n="sshAccess">SSH Access</div>
+        <div class="row2">
+          <div class="field"><label data-i18n="user">Username</label><input id="username" value="admin"></div>
+          <div class="field"><label data-i18n="port">SSH Port</label><input id="port" type="number" value="22"></div>
+        </div>
+        <div class="field"><label data-i18n="password">Password</label><input id="password" type="password" placeholder="••••••••"></div>
+      </div>
+      <div class="sec">
+        <div class="sec-label" data-i18n="targetDevices">Target Devices</div>
+        <div class="field">
+          <label data-i18n="ipList">IP Addresses (one per line)</label>
+          <textarea id="hosts" class="hosts" placeholder="192.168.1.1&#10;10.0.0.1&#10;172.16.0.1"></textarea>
+        </div>
+        <div class="host-stat" id="hostStat">0 addresses</div>
+      </div>
+      <div class="sec">
+        <div class="sec-label" data-i18n="actions">Actions</div>
+        <div id="actionList"></div>
+      </div>
+    </div>
+
+    <!-- EXPORT TAB -->
+    <div class="sidebar-scroll" id="panelExport" style="display:none">
+      <div class="sec">
+        <div class="sec-label" data-i18n="mktSSH">MikroTik SSH Access</div>
+        <div class="row2">
+          <div class="field"><label data-i18n="user">Username</label><input id="ex_username" value="admin"></div>
+          <div class="field"><label data-i18n="port">Port</label><input id="ex_port" type="number" value="22"></div>
+        </div>
+        <div class="field"><label data-i18n="password">Password</label><input id="ex_password" type="password" placeholder="••••••••"></div>
+        <div class="field">
+          <label data-i18n="ipList">IP Addresses (one per line)</label>
+          <textarea id="ex_hosts" class="hosts" placeholder="192.168.1.1&#10;10.0.0.1"></textarea>
+        </div>
+        <div class="host-stat" id="exHostStat">0 addresses</div>
+      </div>
+      <div class="sec">
+        <div class="sec-label" data-i18n="transferProto">Transfer Protocol</div>
+        <div class="proto-toggle">
+          <button class="proto-btn active" id="pbSftp" onclick="setProto('sftp')">🔒 SFTP</button>
+          <button class="proto-btn" id="pbFtp" onclick="setProto('ftp')">📡 FTP</button>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-label" data-i18n="destServer">Destination Server</div>
+        <div class="row2">
+          <div class="field"><label data-i18n="hostIp">Host / IP</label><input id="srv_host" placeholder="backup.server.com"></div>
+          <div class="field"><label data-i18n="port">Port</label><input id="srv_port" type="number" value="22"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label data-i18n="user">Username</label><input id="srv_user" placeholder="admin"></div>
+          <div class="field"><label data-i18n="password">Password</label><input id="srv_pass" type="password" placeholder="••••••••"></div>
+        </div>
+        <div class="field"><label data-i18n="folder">Folder</label><input id="srv_folder" value="/exports/mikrotik"></div>
+        <div class="test-row">
+          <button class="btn-ghost" onclick="testServer()" id="btnTest">🔍 <span data-i18n="testConn">Test Connection</span></button>
+          <span class="test-result" id="testResult"></span>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-label" data-i18n="options">Options</div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="chkDelete" checked>
+          <span data-i18n="deleteAfter">Delete export file from router after transfer</span>
+        </label>
+      </div>
+      <div class="sec">
+        <div class="field"><label data-i18n="parallel">Parallel devices</label><input id="ex_threads" type="number" value="5" min="1" max="30"></div>
+        <button class="btn-primary green" id="btnExport" onclick="executeExport()">
+          📤 <span data-i18n="runExport">Run Config Export</span>
+        </button>
+      </div>
+    </div>
+
+
+    <!-- SCRIPT DEPLOY TAB -->
+    <div class="sidebar-scroll" id="panelScript" style="display:none">
+      <div class="sec">
+        <div class="sec-label">Upload Script</div>
+        <div style="border:2px dashed var(--border2);border-radius:var(--r);padding:16px;text-align:center;cursor:pointer;transition:all .15s" 
+             id="scriptDropZone" onclick="document.getElementById('scriptFileInput').click()"
+             ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+             ondragleave="this.style.borderColor='var(--border2)'"
+             ondrop="handleScriptDrop(event)">
+          <div style="font-size:24px;margin-bottom:6px">📄</div>
+          <div style="font-size:11px;color:var(--text-2)">Click or drag .rsc / .txt file</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:3px">Supports {@variable} placeholders</div>
+        </div>
+        <input type="file" id="scriptFileInput" accept=".rsc,.txt" style="display:none" onchange="handleScriptFile(event)">
+      </div>
+
+      <div class="sec" id="scriptListSec">
+        <div class="sec-label">Saved Scripts</div>
+        <div id="scriptList" style="display:flex;flex-direction:column;gap:4px">
+          <div style="font-size:11px;color:var(--text-3);padding:6px">No scripts uploaded yet</div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-label">SSH Access</div>
+        <div class="row2">
+          <div class="field"><label>Username</label><input id="sc_user" value="admin"></div>
+          <div class="field"><label>Port</label><input id="sc_port" type="number" value="22"></div>
+        </div>
+        <div class="field"><label>Password</label><input id="sc_pass" type="password" placeholder="••••••••"></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-label">Target Devices</div>
+        <div class="field">
+          <label>IP Addresses (one per line)</label>
+          <textarea id="sc_hosts" class="hosts" style="height:80px" placeholder="192.168.1.1&#10;10.0.0.1"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROMON TAB -->
+    <div class="sidebar-scroll" id="panelRomon" style="display:none">
+      <div class="sec">
+        <div class="sec-label">RoMON Proxy Router</div>
+        <div style="font-size:10px;color:var(--text-3);line-height:1.5;margin-bottom:4px">
+          Router with public IP and RoMON server enabled. Used as SSH jump host.
+        </div>
+        <div class="row2">
+          <div class="field"><label>Host / IP</label><input id="rm_host" placeholder="143.244.110.117"></div>
+          <div class="field"><label>Port</label><input id="rm_port" type="number" value="22"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Username</label><input id="rm_user" value="admin"></div>
+          <div class="field"><label>Password</label><input id="rm_pass" type="password" placeholder="••••••••"></div>
+        </div>
+        <button class="btn-primary" style="width:100%;padding:8px" onclick="romonScan()">
+          🔍 Scan RoMON Neighbours
+        </button>
+      </div>
+
+      <div class="sec" id="romonNeighSec" style="display:none">
+        <div class="sec-label">Discovered Devices</div>
+        <div id="romonNeighList" style="display:flex;flex-direction:column;gap:4px"></div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;line-height:1.5">
+          Click a device to add its IP to the deploy target list.
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-label">Target Device Credentials</div>
+        <div style="font-size:10px;color:var(--text-3);margin-bottom:4px">
+          Credentials for the new MikroTik being configured (default is usually admin/empty).
+        </div>
+        <div class="row2">
+          <div class="field"><label>Username</label><input id="rm_tgt_user" value="admin"></div>
+          <div class="field"><label>Port</label><input id="rm_tgt_port" type="number" value="22"></div>
+        </div>
+        <div class="field"><label>Password</label><input id="rm_tgt_pass" type="password" placeholder="(empty for new device)"></div>
+        <div class="field">
+          <label>Target IP (new device)</label>
+          <input id="rm_tgt_ip" placeholder="192.168.88.1">
+        </div>
+      </div>
+    </div>
+
+    <!-- AI TAB -->
+    <div class="sidebar-scroll" id="panelAi" style="display:none">
+      <div class="sec">
+        <div class="sec-label">API Key</div>
+        <div class="field">
+          <label>Provider</label>
+          <select id="aiProvider" onchange="onProviderChange()">
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="openai">OpenAI (GPT)</option>
+            <option value="groq">⭐ Groq – Free tier (Llama / Mixtral)</option>
+            <option value="gemini">⭐ Google Gemini – Free tier</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>API Key</label>
+          <input type="password" id="aiApiKey" placeholder="sk-ant-..." autocomplete="off">
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="ai-key-save" onclick="saveApiKey()">💾 Save Key</button>
+          <span class="ai-key-ok" id="aiKeyStatus"></span>
+        </div>
+        <div style="font-size:10px;color:var(--text-3);line-height:1.5;margin-top:4px">
+          Key stored only in your browser. Never sent to this app's server.
+        </div>
+        <div style="font-size:11px;color:var(--yellow);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:var(--r-sm);padding:8px 10px;margin-top:4px;line-height:1.6">
+          ⭐ <strong>Free options:</strong><br>
+          • <strong>Groq</strong> — groq.com → free API key, very fast<br>
+          • <strong>Gemini</strong> — aistudio.google.com → free API key
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-label">Model</div>
+        <div class="field">
+          <label>Model</label>
+          <select id="aiModel">
+            <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
+          </select>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-label">Context</div>
+        <div style="font-size:11px;color:var(--text-2);line-height:1.6;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;">
+          AI is aware it's helping with <strong>MikroTik RouterOS</strong> configuration. 
+          Ask anything — it will provide commands you can paste into terminal or use directly.
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main">
+    <div class="config-area" id="configArea">
+      <div class="config-header">
+        <span class="config-title" id="cfgTitle" data-i18n="selectAction">Select an action from the left panel</span>
+        <span class="config-badge" id="cfgBadge" style="display:none"></span>
+      </div>
+      <div class="params-grid" id="paramsGrid"></div>
+
+      <!-- Command Preview -->
+      <div class="cmd-preview" id="cmdPreview" style="display:none">
+        <div class="cmd-preview-header">
+          <span class="cmd-preview-title" data-i18n="cmdPreview">Commands to be executed</span>
+          <span style="font-size:10px;color:var(--text-3);font-family:var(--mono)" id="cmdPreviewCount"></span>
+        </div>
+        <div class="cmd-preview-body" id="cmdPreviewBody"></div>
+      </div>
+
+      <div class="exec-bar">
+        <button class="btn-primary" id="btnExec" disabled onclick="executeAction()" style="width:auto;padding:8px 20px">
+          ▶ <span data-i18n="execAll">Execute on All Devices</span>
+        </button>
+        <button class="btn-ghost" onclick="clearResults()"><span data-i18n="clearResults">Clear Results</span></button>
+        <div class="thread-ctl">
+          <span data-i18n="parallel">Parallel</span>: <input id="maxThreads" type="number" value="10" min="1" max="50"> <span data-i18n="devices">devices</span>
+        </div>
+      </div>
+      <div class="progress-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+
+    <div class="stats-bar" id="statsBar">
+      <div class="stat"><span data-i18n="total">Total</span> <span class="stat-val" id="sTotal">0</span></div>
+      <div class="stat">✓ OK <span class="stat-val g" id="sOk">0</span></div>
+      <div class="stat">✗ <span data-i18n="errors">Errors</span> <span class="stat-val r" id="sErr">0</span></div>
+      <div class="stat">⏱ <span class="stat-val" id="sTime">–</span></div>
+    </div>
+
+    <div class="results-panel" id="resultsPanel">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📡</div>
+        <div class="empty-text" data-i18n="emptyHint">Select an action and enter IP addresses</div>
+      </div>
+    </div>
+
+
+    <!-- SCRIPT DEPLOY MAIN PANEL -->
+    <div class="ai-panel" id="scriptPanel">
+      <div class="ai-topbar" style="gap:12px;flex-wrap:wrap">
+        <span style="font-weight:600;font-size:14px">📜 Script Deploy</span>
+        <span id="scSelectedName" style="font-size:12px;color:var(--accent-h);font-family:var(--mono)">No script selected</span>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn-ghost" onclick="clearResults()">Clear Results</button>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2)">
+            Parallel: <input id="sc_threads" type="number" value="3" min="1" max="20" style="width:44px;text-align:center">
+          </div>
+        </div>
+      </div>
+
+      <!-- Variable substitution form -->
+      <div id="scVarForm" style="background:var(--surface);border-bottom:1px solid var(--border);padding:14px 18px;flex-shrink:0;display:none">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:600">Script Variables</span>
+          <span style="font-size:10px;color:var(--text-3);font-family:var(--mono)" id="scVarHint"></span>
+        </div>
+        <div id="scVarGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:12px"></div>
+
+        <!-- Script preview -->
+        <div class="cmd-preview" id="scPreview">
+          <div class="cmd-preview-header">
+            <span class="cmd-preview-title">Script Preview (first 20 lines)</span>
+            <button class="log-btn2" onclick="toggleScriptPreview()">Toggle full</button>
+          </div>
+          <div class="cmd-preview-body" id="scPreviewBody" style="color:var(--text-2);max-height:100px"></div>
+        </div>
+
+        <div style="margin-top:10px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text-2)">
+              <input type="checkbox" id="scViaRomon" onchange="toggleRomonFields()" style="accent-color:var(--accent)">
+              Deploy via RoMON (use proxy router to reach target)
+            </label>
+          </div>
+          <div id="scRomonInfo" style="display:none;font-size:11px;background:var(--accent-dim);border:1px solid rgba(59,130,246,.3);border-radius:var(--r-sm);padding:8px 10px;color:var(--accent-h);margin-bottom:8px">
+            Using RoMON proxy: <span id="scRomonProxy"></span> → target: <span id="scRomonTarget"></span>
+          </div>
+          <button class="btn-primary" id="btnDeploy" onclick="executeDeploy()" style="width:auto;padding:9px 24px">
+            🚀 Deploy Script
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-wrap" id="scProgressWrap"><div class="progress-bar" id="scProgressBar"></div></div>
+
+      <div class="stats-bar" id="scStatsBar" style="display:none">
+        <div class="stat">Total <span class="stat-val" id="scTotal">0</span></div>
+        <div class="stat">✓ OK <span class="stat-val g" id="scOk">0</span></div>
+        <div class="stat">✗ Failed <span class="stat-val r" id="scErr">0</span></div>
+        <div class="stat">⏱ <span class="stat-val" id="scTime">–</span></div>
+      </div>
+
+      <div class="results-panel" id="scResults">
+        <div class="empty-state">
+          <div class="empty-icon">📜</div>
+          <div class="empty-text">Upload a script from the left panel, fill variables and deploy</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROMON MAIN PANEL -->
+    <div class="ai-panel" id="romonPanel">
+      <div class="ai-topbar">
+        <span style="font-weight:600;font-size:14px">🔗 RoMON – Remote Device Access</span>
+        <span id="rmStatus" style="font-size:11px;color:var(--text-3)"></span>
+      </div>
+
+      <!-- RoMON output -->
+      <div style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text-2)">How RoMON works in this app</div>
+          <div style="font-size:11px;color:var(--text-3);line-height:1.8">
+            1. Set up your <strong style="color:var(--text-2)">proxy router</strong> (with public IP) in the left sidebar<br>
+            2. Click <strong style="color:var(--text-2)">Scan Neighbours</strong> to discover devices reachable via RoMON<br>
+            3. Click a device to select it as target<br>
+            4. Go to <strong style="color:var(--text-2)">📜 Script tab</strong> → check <em>Deploy via RoMON</em><br>
+            5. Deploy your config script through the tunnel<br><br>
+            <strong style="color:var(--yellow)">⚠ Requirement:</strong> The proxy MikroTik must have RoMON server enabled and SSH port 22 open.
+          </div>
+        </div>
+
+        <div id="rmScanResults" style="display:none">
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text-2)">RoMON Scan Output</div>
+          <div id="rmRawOutput" style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--cyan);white-space:pre-wrap;max-height:300px;overflow-y:auto"></div>
+        </div>
+
+        <div id="rmDeviceCards" style="display:flex;flex-direction:column;gap:6px"></div>
+
+      </div>
+    </div>
+
+    <!-- AI ASSISTANT PANEL -->
+    <div class="ai-panel" id="aiPanel">
+      <!-- topbar -->
+      <div class="ai-topbar">
+        <span style="font-size:11px;color:var(--text-3);font-family:var(--mono)" id="aiTopModel">claude-sonnet-4-6</span>
+        <span id="aiTopStatus" style="font-size:11px;color:var(--text-3)"></span>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="ai-clear-chat" onclick="clearChat()">🗑 Clear chat</button>
+        </div>
+      </div>
+
+      <!-- messages -->
+      <div class="ai-messages" id="aiMessages">
+        <div class="ai-empty" id="aiEmptyState">
+          <div class="ai-empty-icon">🤖</div>
+          <div class="ai-empty-title">MikroTik AI Assistant</div>
+          <div class="ai-empty-sub">Ask anything about RouterOS configuration. I'll provide ready-to-use commands.</div>
+          <div class="ai-suggestions">
+            <button class="ai-suggestion" onclick="askSuggestion(this)">How to block an IP with firewall?</button>
+            <button class="ai-suggestion" onclick="askSuggestion(this)">Set up VLAN on ether2</button>
+            <button class="ai-suggestion" onclick="askSuggestion(this)">Configure OSPF between two routers</button>
+            <button class="ai-suggestion" onclick="askSuggestion(this)">Add a hotspot on wlan1</button>
+            <button class="ai-suggestion" onclick="askSuggestion(this)">Create a simple queue for 192.168.1.100 at 10M/5M</button>
+            <button class="ai-suggestion" onclick="askSuggestion(this)">Enable WireGuard VPN tunnel</button>
+            <button class="ai-suggestion" onclick="askSuggestion(this)">Backup config and send via email</button>
+            <button class="ai-suggestion" onclick="askSuggestion(this)">Monitor bandwidth per IP with torch</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- input -->
+      <div class="ai-inputbar">
+        <textarea class="ai-textarea" id="aiInput" placeholder="Ask about MikroTik / RouterOS..." rows="2"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage();}"></textarea>
+        <div class="ai-send-row">
+          <button class="ai-send" id="aiSendBtn" onclick="sendAiMessage()">
+            <span>Send</span> ↵
+          </button>
+          <span style="font-size:11px;color:var(--text-3)">Shift+Enter for new line</span>
+          <span class="ai-model-badge" id="aiModelBadge">claude-sonnet-4-6</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ─── LIVE LOG ─── -->
+<div class="log-panel" id="logPanel">
+  <div class="log-bar">
+    <div class="log-title"><div class="live-dot" id="liveDot"></div> Live Log</div>
+    <span class="log-count" id="logCount">0 messages</span>
+    <div class="log-actions2">
+      <button class="log-btn2" onclick="clearLog()" data-i18n="clear">Clear</button>
+      <button class="log-btn2" onclick="copyLog()" data-i18n="copy">Copy</button>
+      <button class="log-btn2" onclick="toggleLog()">✕</button>
+    </div>
+  </div>
+  <div class="log-body" id="logBody"></div>
+</div>
+
+<script id="templates-data" type="application/json">{{ templates|tojson }}</script>
+<script>
+// ─── i18n ────────────────────────────────────────────────────────────────────
+const I18N = {
+  en: {
+    tabActions:'⚡ Actions', tabExport:'📤 Export', sshAccess:'SSH Access',
+    user:'Username', port:'SSH Port', password:'Password',
+    targetDevices:'Target Devices', ipList:'IP Addresses (one per line)',
+    actions:'Actions', mktSSH:'MikroTik SSH Access', transferProto:'Transfer Protocol',
+    destServer:'Destination Server', hostIp:'Host / IP', folder:'Folder',
+    testConn:'Test Connection', options:'Options',
+    deleteAfter:'Delete export file from router after transfer',
+    parallel:'Parallel', devices:'devices',
+    runExport:'Run Config Export', selectAction:'Select an action from the left panel',
+    cmdPreview:'Commands to be executed', execAll:'Execute on All Devices',
+    clearResults:'Clear Results', total:'Total', errors:'Errors',
+    emptyHint:'Select an action and enter IP addresses',
+    liveLog:'Live Log', clear:'Clear', copy:'Copy',
+    pillDevices:'devices', hostStat:'addresses',
+    noAction:'No action selected', logMessages:'messages',
+  },
+  bs: {
+    tabActions:'⚡ Akcije', tabExport:'📤 Export', sshAccess:'SSH Pristup',
+    user:'Korisnik', port:'SSH Port', password:'Lozinka',
+    targetDevices:'Ciljani uređaji', ipList:'IP adrese (jedna po liniji)',
+    actions:'Akcije', mktSSH:'MikroTik SSH Pristup', transferProto:'Protokol prijenosa',
+    destServer:'Odredišni server', hostIp:'Host / IP', folder:'Folder',
+    testConn:'Test konekcije', options:'Opcije',
+    deleteAfter:'Obriši export fajl s rutera nakon prijenosa',
+    parallel:'Paralelno', devices:'uređaja',
+    runExport:'Pokreni export konfiguracije', selectAction:'Odaberi akciju s lijeve strane',
+    cmdPreview:'Komande koje će biti izvršene', execAll:'Izvrši na svim uređajima',
+    clearResults:'Obriši rezultate', total:'Ukupno', errors:'Grešaka',
+    emptyHint:'Odaberi akciju i unesi IP adrese',
+    liveLog:'Live Log', clear:'Obriši', copy:'Kopiraj',
+    pillDevices:'uređaja', hostStat:'adresa',
+    noAction:'Nije odabrana akcija', logMessages:'poruka',
+  }
+};
+
+// Template translations (names/labels/categories)
+const T18N = {
+  en: {
+    // categories
+    'Firewall / Routing': 'Firewall / Routing',
+    'Update / Upgrade': 'Update / Upgrade',
+    'WiFi': 'WiFi',
+    'IP / WAN': 'IP / WAN',
+    'Queue / Brzina': 'Queue / Speed',
+    'Svašta': 'Miscellaneous',
+    // action names
+    'Block IP Address': 'Block IP Address',
+    'Remove IP from Blacklist': 'Remove IP from Blacklist',
+    'Set DNS Servers': 'Set DNS Servers',
+    'Set NTP Server': 'Set NTP Server',
+    'Check for Updates': 'Check for Updates',
+    'Install Update (reboot!)': 'Install Update (reboot!)',
+    'Reboot Device': 'Reboot Device',
+    'System Info': 'System Info',
+    'Change WiFi SSID – 2.4 GHz': 'Change WiFi SSID – 2.4 GHz',
+    'Change WiFi SSID – 5 GHz': 'Change WiFi SSID – 5 GHz',
+    'Change SSID – Both Bands (2.4 + 5)': 'Change SSID – Both Bands (2.4 + 5)',
+    'Change WiFi Password Only': 'Change WiFi Password Only',
+    'Disable WiFi Interface': 'Disable WiFi Interface',
+    'Enable WiFi Interface': 'Enable WiFi Interface',
+    'Show WiFi Configuration': 'Show WiFi Configuration',
+    'Set Static WAN IP Address': 'Set Static WAN IP Address',
+    'Set WAN to DHCP Client': 'Set WAN to DHCP Client',
+    'Show IP Addresses & Routes': 'Show IP Addresses & Routes',
+    'Add Simple Queue (limit speed)': 'Add Simple Queue (limit speed)',
+    'Remove Simple Queue by Name': 'Remove Simple Queue by Name',
+    'Change Existing Queue Speed': 'Change Existing Queue Speed',
+    'Show All Queues': 'Show All Queues',
+    'Custom Command': 'Custom Command',
+    // param labels
+    'IP Address to Block': 'IP Address to Block',
+    'IP Address': 'IP Address',
+    'Primary DNS': 'Primary DNS',
+    'Secondary DNS': 'Secondary DNS',
+    'NTP Server': 'NTP Server',
+    'New SSID': 'New SSID',
+    'WiFi Password': 'WiFi Password',
+    'New WiFi Password': 'New WiFi Password',
+    'SSID 2.4 GHz': 'SSID 2.4 GHz',
+    'SSID 5 GHz': 'SSID 5 GHz',
+    'WiFi Password (both bands)': 'WiFi Password (both bands)',
+    'WAN Interface': 'WAN Interface',
+    'New IP Address': 'New IP Address',
+    'Prefix (CIDR)': 'Prefix (CIDR)',
+    'Gateway': 'Gateway',
+    'Queue Name': 'Queue Name',
+    'IP Address / Subnet': 'IP Address / Subnet',
+    'Download Limit': 'Download Limit',
+    'Upload Limit': 'Upload Limit',
+    'New Download': 'New Download',
+    'New Upload': 'New Upload',
+    'RouterOS Commands (one per line)': 'RouterOS Commands (one per line)',
+  },
+  bs: {
+    'Firewall / Routing': 'Firewall / Routing',
+    'Update / Upgrade': 'Update / Upgrade',
+    'WiFi': 'WiFi',
+    'IP / WAN': 'IP / WAN',
+    'Queue / Brzina': 'Queue / Brzina',
+    'Svašta': 'Svašta',
+    'Block IP Address': 'Blokiraj IP adresu',
+    'Remove IP from Blacklist': 'Ukloni IP iz blackliste',
+    'Set DNS Servers': 'Postavi DNS servere',
+    'Set NTP Server': 'Postavi NTP server',
+    'Check for Updates': 'Provjeri dostupne updatee',
+    'Install Update (reboot!)': 'Instaliraj update (reboot!)',
+    'Reboot Device': 'Reboot uređaja',
+    'System Info': 'Pregled sistema',
+    'Change WiFi SSID – 2.4 GHz': 'Promijeni WiFi SSID – 2.4 GHz',
+    'Change WiFi SSID – 5 GHz': 'Promijeni WiFi SSID – 5 GHz',
+    'Change SSID – Both Bands (2.4 + 5)': 'Promijeni SSID – oba benda',
+    'Change WiFi Password Only': 'Promijeni samo WiFi lozinku',
+    'Disable WiFi Interface': 'Isključi WiFi interface',
+    'Enable WiFi Interface': 'Uključi WiFi interface',
+    'Show WiFi Configuration': 'Pregled WiFi konfiguracije',
+    'Set Static WAN IP Address': 'Postavi statičku WAN IP adresu',
+    'Set WAN to DHCP Client': 'Postavi WAN na DHCP klijent',
+    'Show IP Addresses & Routes': 'Prikaži IP adrese i rute',
+    'Add Simple Queue (limit speed)': 'Dodaj Simple Queue (ograniči brzinu)',
+    'Remove Simple Queue by Name': 'Ukloni Simple Queue po imenu',
+    'Change Existing Queue Speed': 'Promijeni brzinu postojećeg queue-a',
+    'Show All Queues': 'Pregled svih queue-ova',
+    'Custom Command': 'Prilagođena komanda',
+    'IP Address to Block': 'IP adresa za blokadu',
+    'IP Address': 'IP adresa',
+    'Primary DNS': 'Primarni DNS',
+    'Secondary DNS': 'Sekundarni DNS',
+    'NTP Server': 'NTP Server',
+    'New SSID': 'Novi SSID',
+    'WiFi Password': 'WiFi lozinka',
+    'New WiFi Password': 'Nova WiFi lozinka',
+    'SSID 2.4 GHz': 'SSID 2.4 GHz',
+    'SSID 5 GHz': 'SSID 5 GHz',
+    'WiFi Password (both bands)': 'WiFi lozinka (oba benda)',
+    'WAN Interface': 'WAN interface',
+    'New IP Address': 'Nova IP adresa',
+    'Prefix (CIDR)': 'Prefix (CIDR)',
+    'Gateway': 'Gateway',
+    'Queue Name': 'Naziv queue-a',
+    'IP Address / Subnet': 'IP adresa / subnet',
+    'Download Limit': 'Download limit',
+    'Upload Limit': 'Upload limit',
+    'New Download': 'Novi download',
+    'New Upload': 'Novi upload',
+    'RouterOS Commands (one per line)': 'RouterOS komande (jedna po liniji)',
+  }
+};
+
+let lang = localStorage.getItem('mkt_lang') || 'en';
+const templates = JSON.parse(document.getElementById('templates-data').textContent);
+
+function t(key) { return I18N[lang][key] || I18N['en'][key] || key; }
+function tName(name) { return T18N[lang][name] || name; }
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('mkt_lang', l);
+  document.getElementById('langEn').classList.toggle('active', l === 'en');
+  document.getElementById('langBs').classList.toggle('active', l === 'bs');
+  applyI18n();
+  rebuildActionList();
+  if (selectedAction) selectAction(selectedAction); // re-render params with new lang
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = val;
+    else el.textContent = val;
+  });
+  // Update host stats
+  const hCount = document.getElementById('hosts').value.split('\n').filter(l=>l.trim()).length;
+  document.getElementById('hostStat').textContent = `${hCount} ${t('hostStat')}`;
+  document.getElementById('pillCount').textContent = `${hCount} ${t('pillDevices')}`;
+  document.getElementById('logCount').textContent = `${logCount2} ${t('logMessages')}`;
+}
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let selectedAction = null, running = false;
+let logLines = [], logCount2 = 0, logOpen = false;
+let statsOk = 0, statsErr = 0, statsTotal = 0;
+let selectedProto = 'sftp';
+
+// ─── SIDEBAR SWITCH ───────────────────────────────────────────────────────────
+function sideSwitch(tab) {
+  const ALL_TABS = ['actions','export','script','romon','ai'];
+  ALL_TABS.forEach(id => {
+    const capId = id.charAt(0).toUpperCase() + id.slice(1);
+    document.getElementById('stab'+capId)?.classList.toggle('active', id===tab);
+    const panel = document.getElementById('panel'+capId);
+    if (panel) panel.style.display = id===tab ? '' : 'none';
+  });
+  // Main panels
+  const isActions = tab === 'actions';
+  document.getElementById('configArea').style.display = isActions ? '' : 'none';
+  document.getElementById('statsBar').style.display = 'none';
+  document.getElementById('aiPanel').classList.toggle('active', tab === 'ai');
+  document.getElementById('scriptPanel').classList.toggle('active', tab === 'script');
+  document.getElementById('romonPanel').classList.toggle('active', tab === 'romon');
+  if (isActions) {
+    // results panel is inside main, always visible
+  }
+}
+
+// ─── PROTOCOL ────────────────────────────────────────────────────────────────
+function setProto(p) {
+  selectedProto = p;
+  document.getElementById('pbSftp').classList.toggle('active', p === 'sftp');
+  document.getElementById('pbFtp').classList.toggle('active',  p === 'ftp');
+  document.getElementById('srv_port').value = p === 'sftp' ? '22' : '21';
+}
+
+// ─── HOST COUNTER ─────────────────────────────────────────────────────────────
+function countHosts(ta, statEl, isPrimary) {
+  const n = ta.value.split('\n').filter(l=>l.trim()).length;
+  document.getElementById(statEl).textContent = `${n} ${t('hostStat')}`;
+  if (isPrimary) document.getElementById('pillCount').textContent = `${n} ${t('pillDevices')}`;
+}
+document.getElementById('hosts').addEventListener('input', function(){ countHosts(this,'hostStat',true); });
+document.getElementById('ex_hosts').addEventListener('input', function(){ countHosts(this,'exHostStat',false); });
+
+// ─── ACTION LIST ──────────────────────────────────────────────────────────────
+const ICONS = {
+  'Firewall / Routing':'🛡️','Update / Upgrade':'⬆️','WiFi':'📶','IP / WAN':'🌐','Queue / Brzina':'⚡','Svašta':'🔧'
+};
+
+function rebuildActionList() {
+  const list = document.getElementById('actionList');
+  list.innerHTML = '';
+  buildActionList();
+}
+
+function buildActionList() {
+  const list = document.getElementById('actionList');
+  const cats = {};
+  for (const [id, tmpl] of Object.entries(templates)) {
+    if (!cats[tmpl.category]) cats[tmpl.category] = [];
+    cats[tmpl.category].push({id, ...tmpl});
+  }
+  for (const [cat, items] of Object.entries(cats)) {
+    const catEl = document.createElement('div');
+    catEl.className = 'action-cat';
+    catEl.textContent = tName(cat);
+    list.appendChild(catEl);
+    for (const item of items) {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn' + (item.id === selectedAction ? ' active' : '');
+      btn.dataset.id = item.id;
+      btn.innerHTML = `<span class="action-icon">${ICONS[item.category]||'▸'}</span>${tName(item.name)}`;
+      btn.onclick = () => selectAction(item.id);
+      list.appendChild(btn);
+    }
+  }
+}
+
+// ─── BUILD COMMAND PREVIEW ────────────────────────────────────────────────────
+function buildCommandPreview() {
+  if (!selectedAction) return;
+  const tmpl = templates[selectedAction];
+  let cmdStr = tmpl.commands;
+
+  // Replace params with current values or placeholders
+  for (const p of (tmpl.params || [])) {
+    const el = document.getElementById(`p_${p.name}`);
+    const val = el?.value || `<${p.placeholder || p.name}>`;
+    cmdStr = cmdStr.replaceAll(`{${p.name}}`, val || `<${p.name}>`);
+  }
+
+  const cmds = cmdStr.split('\n').filter(l => l.trim());
+  const body = document.getElementById('cmdPreviewBody');
+  const count = document.getElementById('cmdPreviewCount');
+  const preview = document.getElementById('cmdPreview');
+
+  preview.style.display = 'block';
+  count.textContent = `${cmds.length} command${cmds.length !== 1 ? 's' : ''}`;
+  body.innerHTML = cmds.map(c => `<span>${esc(c)}</span>`).join('\n');
+}
+
+function selectAction(id) {
+  selectedAction = id;
+  document.querySelectorAll('.action-btn').forEach(b => b.classList.toggle('active', b.dataset.id === id));
+  const tmpl = templates[id];
+  document.getElementById('cfgTitle').textContent = tName(tmpl.name);
+  const badge = document.getElementById('cfgBadge');
+  badge.textContent = tName(tmpl.category);
+  badge.style.display = 'inline';
+
+  const grid = document.getElementById('paramsGrid');
+  grid.innerHTML = '';
+  for (const p of (tmpl.params || [])) {
+    const div = document.createElement('div');
+    div.className = 'field';
+    const labelText = tName(p.label);
+    if (p.multiline) {
+      div.style.gridColumn = '1 / -1';
+      div.innerHTML = `<label>${labelText}</label><textarea style="height:90px;font-size:11px" id="p_${p.name}" placeholder="${p.placeholder||''}"></textarea>`;
+    } else {
+      const inputType = p.name === 'password' ? 'password' : (p.type || 'text');
+      div.innerHTML = `<label>${labelText}</label><input id="p_${p.name}" type="${inputType}" placeholder="${p.placeholder||''}">`;
+    }
+    grid.appendChild(div);
+  }
+
+  // Attach live preview update to all param inputs
+  setTimeout(() => {
+    for (const p of (tmpl.params || [])) {
+      const el = document.getElementById(`p_${p.name}`);
+      if (el) el.addEventListener('input', buildCommandPreview);
+    }
+    buildCommandPreview();
+  }, 0);
+
+  document.getElementById('btnExec').disabled = false;
+}
+
+function getParams() {
+  const tmpl = templates[selectedAction];
+  const p = {};
+  for (const param of (tmpl.params || [])) {
+    p[param.name] = document.getElementById(`p_${param.name}`)?.value || '';
+  }
+  return p;
+}
+
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function clearResults() {
+  document.getElementById('resultsPanel').innerHTML = `
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📡</div>
+      <div class="empty-text">${t('emptyHint')}</div>
+    </div>`;
+  document.getElementById('statsBar').style.display = 'none';
+  statsOk = 0; statsErr = 0; statsTotal = 0;
+}
+
+function toggleResult(id) {
+  document.getElementById(`rb-${id}`)?.classList.toggle('open');
+  document.getElementById(`rc-${id}`)?.classList.toggle('open');
+}
+
+function updateStats(ok, err, total, elapsed) {
+  document.getElementById('statsBar').style.display = 'flex';
+  document.getElementById('sTotal').textContent = total;
+  document.getElementById('sOk').textContent = ok;
+  document.getElementById('sErr').textContent = err;
+  if (elapsed) document.getElementById('sTime').textContent = elapsed + 's';
+}
+
+// ─── LIVE LOG ─────────────────────────────────────────────────────────────────
+function toggleLog() {
+  logOpen = !logOpen;
+  document.getElementById('logPanel').classList.toggle('open', logOpen);
+  document.getElementById('appGrid').classList.toggle('log-open', logOpen);
+  document.getElementById('btnLogToggle').classList.toggle('active', logOpen);
+  document.getElementById('btnLogToggle').innerHTML = (logOpen ? '▼ ' : '⬛ ') + t('liveLog');
+}
+
+function log(host, msg, type='dim') {
+  const time = new Date().toTimeString().slice(0,8);
+  logLines.push({time, host, msg, type});
+  logCount2++;
+  document.getElementById('logCount').textContent = `${logCount2} ${t('logMessages')}`;
+  if (!logOpen) toggleLog();
+  const body = document.getElementById('logBody');
+  const el = document.createElement('div');
+  el.className = `log-line ${type}`;
+  el.innerHTML = `<span class="ll-time">${time}</span><span class="ll-host">${esc(host||'system')}</span><span class="ll-msg">${esc(msg)}</span>`;
+  body.appendChild(el);
+  body.scrollTop = body.scrollHeight;
+  const dot = document.getElementById('liveDot');
+  dot.classList.add('on');
+  clearTimeout(dot._t);
+  dot._t = setTimeout(() => dot.classList.remove('on'), 1500);
+}
+
+function clearLog() {
+  logLines = []; logCount2 = 0;
+  document.getElementById('logBody').innerHTML = '';
+  document.getElementById('logCount').textContent = `0 ${t('logMessages')}`;
+}
+
+function copyLog() {
+  navigator.clipboard.writeText(logLines.map(l=>`[${l.time}] ${l.host.padEnd(20)} ${l.msg}`).join('\n'));
+}
+
+// ─── EXECUTE ACTION ───────────────────────────────────────────────────────────
+async function executeAction() {
+  if (running || !selectedAction) return;
+  const hosts = document.getElementById('hosts').value;
+  if (!hosts.trim()) { alert(t('emptyHint')); return; }
+
+  running = true; statsOk = 0; statsErr = 0; statsTotal = 0;
+  clearResults();
+  const btn = document.getElementById('btnExec');
+  btn.disabled = true; btn.innerHTML = '⏳ ...';
+  const pw = document.getElementById('progressWrap');
+  const pb = document.getElementById('progressBar');
+  pw.style.display = 'block'; pb.style.width = '0%';
+  const total = hosts.split('\n').filter(l=>l.trim()).length;
+  const t0 = Date.now(); let completed = 0;
+  log('system', `▶ ${tName(templates[selectedAction]?.name)} → ${total} device(s)`, 'info');
+  try {
+    const resp = await fetch('/api/execute', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        hosts, port:document.getElementById('port').value,
+        username:document.getElementById('username').value,
+        password:document.getElementById('password').value,
+        template_id:selectedAction, params:getParams(),
+        max_threads:parseInt(document.getElementById('maxThreads').value)||10
+      })
+    });
+    const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf='';
+    while(true) {
+      const {done,value} = await reader.read(); if(done) break;
+      buf += dec.decode(value,{stream:true});
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = JSON.parse(line.slice(6));
+        if (data.done) { log('system',`■ Done: ${statsOk} OK, ${statsErr} errors (${((Date.now()-t0)/1000).toFixed(1)}s)`,statsErr?'warn':'ok'); continue; }
+        completed++;
+        if (data.connected) {
+          statsOk++;
+          for (const r of (data.results||[])) {
+            const out = r.output ? ` → ${r.output.slice(0,80)}${r.output.length>80?'…':''}` : '';
+            log(data.host, r.error ? `✗ ${r.command} → ${r.error}` : `✓ ${r.command}${out}`, r.error?'err':'ok');
+          }
+        } else { statsErr++; log(data.host, `✗ ${data.error}`, 'err'); }
+        statsTotal = completed;
+        pb.style.width = `${completed/total*100}%`;
+        updateStats(statsOk,statsErr,statsTotal,((Date.now()-t0)/1000).toFixed(1));
+        addActionResult(data);
+      }
+    }
+  } catch(e) { log('system',`✗ Fetch error: ${e.message}`,'err'); }
+  running = false; btn.disabled = false;
+  btn.innerHTML = `▶ ${t('execAll')}`;
+  pw.style.display = 'none';
+}
+
+function addActionResult(data) {
+  document.getElementById('emptyState')?.remove();
+  const panel = document.getElementById('resultsPanel');
+  const id = data.host.replace(/\./g,'_')+'_'+Date.now();
+  const ok = data.connected && (data.results||[]).every(r=>r.success);
+  const dotCls = !data.connected ? 'dot-err' : (ok ? 'dot-ok' : 'dot-warn');
+  const okN = (data.results||[]).filter(r=>r.success).length;
+  const sum = data.connected ? `${okN}/${(data.results||[]).length} OK` : data.error;
+  let bodyHtml = !data.connected ? `<div class="err-banner">${esc(data.error)}</div>` :
+    (data.results||[]).map(r=>`<div class="cmd-block">
+      <div class="cmd-head"><span class="cmd-dot2"></span>${esc(r.command)}</div>
+      <div class="cmd-out ${r.error?'err':'ok'}">${esc(r.error||r.output||'(no output)')}</div>
+    </div>`).join('');
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  card.innerHTML = `
+    <div class="result-header" onclick="toggleResult('${id}')">
+      <div class="status-dot ${dotCls}"></div>
+      <div class="result-host">${esc(data.host)}</div>
+      <div class="result-sum">${esc(sum)}</div>
+      <div class="result-chev" id="rc-${id}">▶</div>
+    </div>
+    <div class="result-body" id="rb-${id}">${bodyHtml}</div>`;
+  panel.appendChild(card);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+// ─── TEST SERVER ──────────────────────────────────────────────────────────────
+async function testServer() {
+  const host = document.getElementById('srv_host').value.trim();
+  const user = document.getElementById('srv_user').value.trim();
+  if (!host||!user) { alert('Enter server host and username!'); return; }
+  const btn = document.getElementById('btnTest');
+  const res = document.getElementById('testResult');
+  btn.disabled = true; btn.innerHTML = '⏳';
+  res.textContent = '';
+  log('system',`🔍 Testing ${selectedProto.toUpperCase()} → ${host}:${document.getElementById('srv_port').value}`,'info');
+  try {
+    const r = await fetch('/api/test-server',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({srv_host:host,srv_port:document.getElementById('srv_port').value,
+        srv_user:user,srv_pass:document.getElementById('srv_pass').value,
+        srv_folder:document.getElementById('srv_folder').value,protocol:selectedProto})
+    });
+    const d = await r.json();
+    for (const s of (d.steps||[])) log('server',(s.ok?'✓ ':'✗ ')+s.msg,s.ok?'ok':'err');
+    if (d.success){res.textContent='✓ OK';res.style.color='var(--green)';}
+    else{res.textContent='✗ Failed';res.style.color='var(--red)';}
+  } catch(e){res.textContent='✗ Error';res.style.color='var(--red)';}
+  btn.disabled=false; btn.textContent=`🔍 ${t('testConn')}`;
+}
+
+// ─── EXECUTE EXPORT ───────────────────────────────────────────────────────────
+async function executeExport() {
+  if (running) return;
+  const hosts = document.getElementById('ex_hosts').value;
+  const srvHost = document.getElementById('srv_host').value.trim();
+  const srvUser = document.getElementById('srv_user').value.trim();
+  if (!hosts.trim()) { alert('Enter IP addresses!'); return; }
+  if (!srvHost||!srvUser) { alert('Enter server details!'); return; }
+  running = true; statsOk = 0; statsErr = 0; statsTotal = 0;
+  clearResults();
+  const btn = document.getElementById('btnExport');
+  btn.disabled = true; btn.innerHTML = '⏳ ...';
+  document.getElementById('statsBar').style.display = 'none';
+  const total = hosts.split('\n').filter(l=>l.trim()).length;
+  const t0 = Date.now(); let completed = 0;
+  log('system',`📤 Config export → ${total} device(s) → ${selectedProto.toUpperCase()} ${srvHost}`,'info');
+  const stepIcons = {connect:'🔌',identity:'🏷️',export_create:'📦',sftp_open:'🔗',sftp_list:'📂',download:'⬇️',delete_local:'🗑️',upload:'☁️',unexpected:'💥'};
+  try {
+    const resp = await fetch('/api/export',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        hosts,port:document.getElementById('ex_port').value,
+        username:document.getElementById('ex_username').value,
+        password:document.getElementById('ex_password').value,
+        srv_host:srvHost,srv_port:document.getElementById('srv_port').value,
+        srv_user:srvUser,srv_pass:document.getElementById('srv_pass').value,
+        srv_folder:document.getElementById('srv_folder').value,
+        protocol:selectedProto,delete_after:document.getElementById('chkDelete').checked,
+        max_threads:parseInt(document.getElementById('ex_threads').value)||5
+      })
+    });
+    const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf='';
+    while(true) {
+      const {done,value} = await reader.read(); if(done) break;
+      buf += dec.decode(value,{stream:true});
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = JSON.parse(line.slice(6));
+        if (data.done){log('system',`■ Export done: ${statsOk} OK, ${statsErr} errors (${((Date.now()-t0)/1000).toFixed(1)}s)`,statsErr?'warn':'ok');continue;}
+        for (const s of (data.steps||[])){
+          const ic = stepIcons[s.step]||'▸';
+          const det = s.detail?` — ${s.detail.slice(0,120)}${s.detail.length>120?'…':''}`:'';
+          log(data.host,`${ic} ${s.label||s.step}${det}`,s.success?'ok':'err');
+        }
+        if(data.success) log(data.host,`✅ ${data.dest}`,'ok');
+        completed++;
+        if(data.success) statsOk++; else statsErr++;
+        statsTotal=completed;
+        updateStats(statsOk,statsErr,statsTotal,((Date.now()-t0)/1000).toFixed(1));
+        addExportResult(data);
+      }
+    }
+  } catch(e){log('system',`✗ Fetch error: ${e.message}`,'err');}
+  running=false; btn.disabled=false;
+  btn.innerHTML=`📤 ${t('runExport')}`;
+}
+
+function addExportResult(data) {
+  document.getElementById('emptyState')?.remove();
+  const panel = document.getElementById('resultsPanel');
+  const id = data.host.replace(/\./g,'_')+'_'+Date.now();
+  const ok = data.success;
+  const dotCls = ok ? 'dot-ok' : (data.connected ? 'dot-warn' : 'dot-err');
+  const failStep = !ok ? (data.steps||[]).filter(s=>!s.success).pop() : null;
+  const sum = ok ? (data.filename||'Export OK') : (failStep?.label||data.error||'Failed');
+  const stepsHtml = (data.steps||[]).map(s=>`
+    <div class="step-item ${s.success?'step-ok':'step-err'}">
+      <span class="si-icon">${s.success?'✓':'✗'}</span>
+      <div class="si-body">
+        <span class="si-label">${esc(s.label||s.step)}</span>
+        ${s.detail?`<span class="si-detail">${esc(s.detail)}</span>`:''}
+      </div>
+    </div>`).join('');
+  const errBanner = failStep ? `<div class="err-banner">${esc(failStep.label)}: ${esc(failStep.detail||'')}</div>` : '';
+  const okLine = ok&&data.dest ? `<div style="font-size:10px;color:var(--green);margin-top:4px;font-family:var(--mono)">✓ ${esc(data.dest)}</div>` : '';
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  card.innerHTML = `
+    <div class="result-header" onclick="toggleResult('${id}')">
+      <div class="status-dot ${dotCls}"></div>
+      <div class="result-host">${esc(data.host)}</div>
+      <div class="result-sum">${esc(sum)}</div>
+      <div class="result-chev" id="rc-${id}">▶</div>
+    </div>
+    <div class="result-body open" id="rb-${id}">
+      <div class="step-list">${stepsHtml}</div>
+      ${errBanner}${okLine}
+    </div>`;
+  panel.appendChild(card);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+
+// ─── AI ASSISTANT ─────────────────────────────────────────────────────────────
+const AI_SYSTEM = `You are an expert MikroTik RouterOS network engineer and assistant.
+The user is managing a fleet of MikroTik routers via SSH.
+
+Your job:
+- Provide precise, ready-to-use RouterOS CLI commands
+- Explain what each command does briefly
+- Format commands in code blocks using triple backticks
+- If multiple commands are needed, list them in order with explanation
+- Warn about dangerous operations (like /system reset-configuration)
+- Adapt to both simple home routers and complex ISP deployments
+- If asked in Bosnian/Croatian/Serbian, respond in that language
+- Keep responses concise but complete
+
+RouterOS syntax reminders:
+- Use [find ...] for conditional operations
+- Prefer :foreach for batch operations  
+- Interface names vary: ether1, wlan1, bridge1, vlan10, etc.
+- Security profiles are separate from wireless interfaces in older RouterOS
+
+Never make up commands that don't exist in RouterOS.`;
+
+const PROVIDERS = {
+  anthropic: {
+    name: 'Anthropic',
+    models: [
+      {id:'claude-sonnet-4-6', label:'Claude Sonnet 4.6'},
+      {id:'claude-haiku-4-5-20251001', label:'Claude Haiku 4.5'},
+    ],
+    keyPlaceholder: 'sk-ant-api03-...',
+    endpoint: 'https://api.anthropic.com/v1/messages',
+  },
+  openai: {
+    name: 'OpenAI',
+    models: [
+      {id:'gpt-4o', label:'GPT-4o'},
+      {id:'gpt-4o-mini', label:'GPT-4o Mini'},
+      {id:'gpt-4-turbo', label:'GPT-4 Turbo'},
+    ],
+    keyPlaceholder: 'sk-...',
+    endpoint: 'https://api.openai.com/v1/chat/completions',
+  },
+  groq: {
+    name: 'Groq',
+    models: [
+      {id:'llama-3.3-70b-versatile', label:'⭐ Llama 3.3 70B (free)'},
+      {id:'llama-3.1-8b-instant', label:'⭐ Llama 3.1 8B (free, fast)'},
+      {id:'mixtral-8x7b-32768', label:'⭐ Mixtral 8x7B (free)'},
+    ],
+    keyPlaceholder: 'gsk_...',
+    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+  },
+  gemini: {
+    name: 'Google Gemini',
+    models: [
+      {id:'gemini-1.5-flash', label:'⭐ Gemini 1.5 Flash (free)'},
+      {id:'gemini-1.5-pro', label:'Gemini 1.5 Pro'},
+      {id:'gemini-2.0-flash', label:'⭐ Gemini 2.0 Flash (free)'},
+    ],
+    keyPlaceholder: 'AIza...',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/',
+  }
+};
+
+let aiHistory = []; // {role, content}
+let aiThinking = false;
+
+function onProviderChange() {
+  const prov = document.getElementById('aiProvider').value;
+  const info = PROVIDERS[prov];
+  document.getElementById('aiApiKey').placeholder = info.keyPlaceholder;
+  // Rebuild model select
+  const sel = document.getElementById('aiModel');
+  sel.innerHTML = info.models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
+  // Load saved key
+  const saved = localStorage.getItem(`mkt_ai_key_${prov}`);
+  document.getElementById('aiApiKey').value = saved || '';
+  document.getElementById('aiKeyStatus').textContent = saved ? '✓ Saved' : '';
+  updateAiModelBadge();
+}
+
+function saveApiKey() {
+  const prov = document.getElementById('aiProvider').value;
+  const key = document.getElementById('aiApiKey').value.trim();
+  if (!key) { document.getElementById('aiKeyStatus').textContent = '✗ Empty'; return; }
+  localStorage.setItem(`mkt_ai_key_${prov}`, key);
+  document.getElementById('aiKeyStatus').textContent = '✓ Saved';
+  document.getElementById('aiKeyStatus').style.color = 'var(--green)';
+}
+
+function updateAiModelBadge() {
+  const prov = document.getElementById('aiProvider').value;
+  const model = document.getElementById('aiModel').value;
+  const label = PROVIDERS[prov]?.models.find(m=>m.id===model)?.label || model;
+  document.getElementById('aiModelBadge').textContent = label;
+  document.getElementById('aiTopModel').textContent = label;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('aiModel').addEventListener('change', updateAiModelBadge);
+  onProviderChange(); // init with saved key if any
+});
+
+function askSuggestion(btn) {
+  document.getElementById('aiInput').value = btn.textContent;
+  sendAiMessage();
+}
+
+function clearChat() {
+  aiHistory = [];
+  const msgs = document.getElementById('aiMessages');
+  msgs.innerHTML = `<div class="ai-empty" id="aiEmptyState">
+    <div class="ai-empty-icon">🤖</div>
+    <div class="ai-empty-title">MikroTik AI Assistant</div>
+    <div class="ai-empty-sub">Ask anything about RouterOS configuration. I'll provide ready-to-use commands.</div>
+    <div class="ai-suggestions">
+      <button class="ai-suggestion" onclick="askSuggestion(this)">How to block an IP with firewall?</button>
+      <button class="ai-suggestion" onclick="askSuggestion(this)">Set up VLAN on ether2</button>
+      <button class="ai-suggestion" onclick="askSuggestion(this)">Configure OSPF between two routers</button>
+      <button class="ai-suggestion" onclick="askSuggestion(this)">Add a hotspot on wlan1</button>
+      <button class="ai-suggestion" onclick="askSuggestion(this)">Create a simple queue for 192.168.1.100 at 10M/5M</button>
+      <button class="ai-suggestion" onclick="askSuggestion(this)">Enable WireGuard VPN tunnel</button>
+      <button class="ai-suggestion" onclick="askSuggestion(this)">Backup config and send via email</button>
+      <button class="ai-suggestion" onclick="askSuggestion(this)">Monitor bandwidth per IP with torch</button>
+    </div>
+  </div>`;
+}
+
+function appendUserMsg(text) {
+  document.getElementById('aiEmptyState')?.remove();
+  const msgs = document.getElementById('aiMessages');
+  const time = new Date().toTimeString().slice(0,5);
+  const el = document.createElement('div');
+  el.className = 'ai-msg user';
+  el.innerHTML = `
+    <div class="ai-avatar">👤</div>
+    <div class="ai-bubble">
+      <div class="ai-text">${esc(text).replace(/\n/g,'<br>')}</div>
+      <div class="ai-time">${time}</div>
+    </div>`;
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function appendTyping() {
+  document.getElementById('aiEmptyState')?.remove();
+  const msgs = document.getElementById('aiMessages');
+  const el = document.createElement('div');
+  el.className = 'ai-msg assistant';
+  el.id = 'aiTypingIndicator';
+  el.innerHTML = `
+    <div class="ai-avatar">🤖</div>
+    <div class="ai-bubble">
+      <div class="ai-text"><div class="ai-typing"><span></span><span></span><span></span></div></div>
+    </div>`;
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+  return el;
+}
+
+function removeTyping() {
+  document.getElementById('aiTypingIndicator')?.remove();
+}
+
+function formatAiResponse(text) {
+  // Parse code blocks and render them with copy buttons
+  const parts = text.split(/(```[\s\S]*?```)/g);
+  return parts.map(part => {
+    if (part.startsWith('```')) {
+      const lines = part.slice(3).split('\n');
+      const lang = lines[0].trim();
+      const code = lines.slice(1).join('\n').replace(/```$/, '').trim();
+      const id = 'code_' + Math.random().toString(36).slice(2,8);
+      return `<div class="ai-cmd-block">
+        <div class="ai-cmd-header">
+          <span class="ai-cmd-label">${lang || 'RouterOS'}</span>
+          <button class="ai-cmd-copy" onclick="copyCode('${id}')">Copy</button>
+        </div>
+        <div class="ai-cmd-body" id="${id}">${esc(code)}</div>
+      </div>`;
+    }
+    // Render plain text with basic markdown
+    return '<p>' + esc(part)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>')
+      + '</p>';
+  }).join('');
+}
+
+function copyCode(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent);
+  const btn = el.previousElementSibling?.querySelector('.ai-cmd-copy');
+  if (btn) { btn.textContent = '✓ Copied'; setTimeout(()=>btn.textContent='Copy',1500); }
+}
+
+function appendAssistantMsg(text) {
+  const msgs = document.getElementById('aiMessages');
+  const time = new Date().toTimeString().slice(0,5);
+  const el = document.createElement('div');
+  el.className = 'ai-msg assistant';
+  el.innerHTML = `
+    <div class="ai-avatar">🤖</div>
+    <div class="ai-bubble">
+      <div class="ai-text">${formatAiResponse(text)}</div>
+      <div class="ai-time">${time}</div>
+    </div>`;
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function callAnthropic(key, model, messages) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 2048,
+      system: AI_SYSTEM,
+      messages
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error(err.error?.message || `HTTP ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.content[0].text;
+}
+
+async function callOpenAI(key, model, messages, endpoint) {
+  const resp = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({
+      model,
+      max_tokens: 2048,
+      messages: [{ role: 'system', content: AI_SYSTEM }, ...messages]
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error(err.error?.message || `HTTP ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.choices[0].message.content;
+}
+
+async function callGemini(key, model, messages) {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+  const geminiMsgs = messages.map(m => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }]
+  }));
+  const resp = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: AI_SYSTEM }] },
+      contents: geminiMsgs,
+      generationConfig: { maxOutputTokens: 2048 }
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error(err.error?.message || `HTTP ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.candidates[0].content.parts[0].text;
+}
+
+async function sendAiMessage() {
+  if (aiThinking) return;
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const prov = document.getElementById('aiProvider').value;
+  const model = document.getElementById('aiModel').value;
+  const key = localStorage.getItem(`mkt_ai_key_${prov}`);
+
+  if (!key) {
+    document.getElementById('aiTopStatus').textContent = '⚠ No API key — click AI tab in sidebar to set up';
+    document.getElementById('aiTopStatus').style.color = 'var(--yellow)';
+    sideSwitch('ai');
+    return;
+  }
+
+  input.value = '';
+  input.style.height = 'auto';
+  aiThinking = true;
+  document.getElementById('aiSendBtn').disabled = true;
+  document.getElementById('aiTopStatus').textContent = '';
+
+  aiHistory.push({ role: 'user', content: text });
+  appendUserMsg(text);
+  appendTyping();
+
+  try {
+    let reply;
+    if (prov === 'anthropic') {
+      reply = await callAnthropic(key, model, aiHistory);
+    } else if (prov === 'gemini') {
+      reply = await callGemini(key, model, aiHistory);
+    } else {
+      reply = await callOpenAI(key, model, aiHistory, PROVIDERS[prov].endpoint);
+    }
+    aiHistory.push({ role: 'assistant', content: reply });
+    removeTyping();
+    appendAssistantMsg(reply);
+  } catch(e) {
+    removeTyping();
+    const msgs = document.getElementById('aiMessages');
+    const errEl = document.createElement('div');
+    errEl.className = 'ai-msg assistant';
+    errEl.innerHTML = `
+      <div class="ai-avatar">🤖</div>
+      <div class="ai-bubble">
+        <div class="ai-text" style="color:var(--red);border-color:rgba(239,68,68,.3);background:var(--red-dim)">
+          ✗ ${esc(e.message)}<br>
+          <span style="font-size:10px;opacity:.7">Check your API key and selected provider</span>
+        </div>
+      </div>`;
+    msgs.appendChild(errEl);
+    msgs.scrollTop = msgs.scrollHeight;
+    aiHistory.pop();
+  }
+
+  aiThinking = false;
+  document.getElementById('aiSendBtn').disabled = false;
+  input.focus();
+}
+
+
+// ─── SCRIPT DEPLOY ────────────────────────────────────────────────────────────
+let scriptStore = {};   // id -> {id, name, content, vars}
+let selectedScriptId = null;
+
+function handleScriptDrop(e) {
+  e.preventDefault();
+  document.getElementById('scriptDropZone').style.borderColor = 'var(--border2)';
+  const file = e.dataTransfer.files[0];
+  if (file) loadScriptFile(file);
+}
+
+function handleScriptFile(e) {
+  const file = e.target.files[0];
+  if (file) loadScriptFile(file);
+  e.target.value = '';
+}
+
+function loadScriptFile(file) {
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const content_b64 = btoa(unescape(encodeURIComponent(e.target.result)));
+    try {
+      const resp = await fetch('/api/scripts/upload', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({name: file.name, content_b64})
+      });
+      const data = await resp.json();
+      if (data.success) {
+        scriptStore[data.id] = data;
+        renderScriptList();
+        selectScript(data.id);
+        log('system', `📜 Script uploaded: ${data.name} (${data.vars.length} variables)`, 'ok');
+      }
+    } catch(err) {
+      log('system', `✗ Upload failed: ${err.message}`, 'err');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function renderScriptList() {
+  const list = document.getElementById('scriptList');
+  const scripts = Object.values(scriptStore);
+  if (!scripts.length) {
+    list.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:6px">No scripts uploaded yet</div>';
+    return;
+  }
+  list.innerHTML = '';
+  for (const s of scripts) {
+    const div = document.createElement('div');
+    div.className = 'script-item' + (s.id === selectedScriptId ? ' active' : '');
+    div.innerHTML = `
+      <span class="script-name" title="${esc(s.name)}">${esc(s.name)}</span>
+      <span class="script-vars">${s.vars.length} vars</span>
+      <button class="script-del" onclick="deleteScript('${s.id}',event)" title="Delete">✕</button>`;
+    div.onclick = () => selectScript(s.id);
+    list.appendChild(div);
+  }
+}
+
+async function deleteScript(id, e) {
+  e.stopPropagation();
+  await fetch(`/api/scripts/delete/${id}`, {method:'DELETE'});
+  delete scriptStore[id];
+  if (selectedScriptId === id) {
+    selectedScriptId = null;
+    document.getElementById('scVarForm').style.display = 'none';
+    document.getElementById('scSelectedName').textContent = 'No script selected';
+  }
+  renderScriptList();
+}
+
+function selectScript(id) {
+  selectedScriptId = id;
+  const s = scriptStore[id];
+  document.querySelectorAll('.script-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.script-item[onclick*="${id}"]`)?.classList.add('active');
+  renderScriptList();
+  document.getElementById('scSelectedName').textContent = s.name;
+  document.getElementById('scVarForm').style.display = '';
+  document.getElementById('scVarHint').textContent = `${s.vars.length} placeholder(s) found`;
+
+  // Build variable input grid
+  const grid = document.getElementById('scVarGrid');
+  grid.innerHTML = '';
+  for (const v of s.vars) {
+    const div = document.createElement('div');
+    div.className = 'field';
+    // Smart defaults
+    const inputType = v.toLowerCase().includes('pass') ? 'password' : 'text';
+    const placeholder = {
+      host_name: 'e.g. Router-01',
+      gateway: 'e.g. 203.0.113.1',
+      ip_address: 'e.g. 203.0.113.10/24',
+      ssid: 'e.g. MyWiFi',
+      password: 'WiFi password',
+    }[v] || '';
+    div.innerHTML = `<label>{@${v}}</label><input id="scv_${v}" type="${inputType}" placeholder="${placeholder}" oninput="updateScriptPreview()">`;
+    grid.appendChild(div);
+  }
+  updateScriptPreview();
+}
+
+function updateScriptPreview() {
+  if (!selectedScriptId) return;
+  let text = scriptStore[selectedScriptId].content;
+  const s = scriptStore[selectedScriptId];
+  for (const v of s.vars) {
+    const el = document.getElementById(`scv_${v}`);
+    const val = el?.value || `{@${v}}`;
+    text = text.replaceAll(`{@${v}}`, val);
+  }
+  const lines = text.split('\n').slice(0, 30);
+  document.getElementById('scPreviewBody').textContent = lines.join('\n') + (text.split('\n').length > 30 ? '\n... (truncated)' : '');
+}
+
+function toggleScriptPreview() {
+  const body = document.getElementById('scPreviewBody');
+  const isShort = body.style.maxHeight === '100px' || !body.style.maxHeight;
+  body.style.maxHeight = isShort ? '400px' : '100px';
+}
+
+function toggleRomonFields() {
+  const via = document.getElementById('scViaRomon').checked;
+  const info = document.getElementById('scRomonInfo');
+  info.style.display = via ? '' : 'none';
+  if (via) {
+    document.getElementById('scRomonProxy').textContent = document.getElementById('rm_host').value || '(not set)';
+    document.getElementById('scRomonTarget').textContent = document.getElementById('rm_tgt_ip').value || document.getElementById('sc_hosts').value.split('\n')[0] || '(not set)';
+  }
+}
+
+async function executeDeploy() {
+  if (!selectedScriptId) { alert('Select a script first!'); return; }
+  const hosts_raw = document.getElementById('sc_hosts').value;
+  const viaRomon = document.getElementById('scViaRomon').checked;
+  let hosts = hosts_raw;
+
+  if (viaRomon) {
+    // Use target IP from RoMON panel
+    const tgtIp = document.getElementById('rm_tgt_ip').value.trim();
+    if (!tgtIp) { alert('Set target device IP in RoMON tab first!'); return; }
+    hosts = tgtIp;
+  }
+
+  if (!hosts.trim()) { alert('Enter at least one target IP!'); return; }
+
+  // Gather var values
+  const s = scriptStore[selectedScriptId];
+  const vars = {};
+  for (const v of s.vars) {
+    vars[v] = document.getElementById(`scv_${v}`)?.value || '';
+  }
+
+  const payload = {
+    script_id: selectedScriptId,
+    hosts,
+    port: document.getElementById('sc_port').value,
+    username: document.getElementById('sc_user').value,
+    password: document.getElementById('sc_pass').value,
+    vars,
+    max_threads: parseInt(document.getElementById('sc_threads').value) || 3,
+    via_romon: viaRomon,
+    romon_host: document.getElementById('rm_host').value,
+    romon_port: document.getElementById('rm_port').value,
+    romon_user: document.getElementById('rm_user').value,
+    romon_pass: document.getElementById('rm_pass').value,
+  };
+
+  const btn = document.getElementById('btnDeploy');
+  btn.disabled = true; btn.textContent = '⏳ Deploying...';
+  document.getElementById('scProgressWrap').style.display = 'block';
+  document.getElementById('scProgressBar').style.width = '0%';
+  document.getElementById('scResults').innerHTML = '';
+  document.getElementById('scStatsBar').style.display = 'none';
+
+  const totalHosts = hosts.split('\n').filter(l=>l.trim()).length;
+  let completed = 0, okCount = 0, errCount = 0;
+  const t0 = Date.now();
+  log('system', `🚀 Deploying ${s.name} → ${totalHosts} device(s)${viaRomon?' via RoMON':''}`, 'info');
+
+  try {
+    const resp = await fetch('/api/scripts/deploy', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
+    while (true) {
+      const {done, value} = await reader.read(); if (done) break;
+      buf += dec.decode(value, {stream:true});
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = JSON.parse(line.slice(6));
+        if (data.done) {
+          log('system', `■ Deploy done: ${okCount} OK, ${errCount} failed (${((Date.now()-t0)/1000).toFixed(1)}s)`, errCount?'warn':'ok');
+          continue;
+        }
+        completed++;
+        if (data.success) okCount++; else errCount++;
+        for (const st of (data.steps||[])) {
+          log(data.host, `${st.success?'✓':'✗'} ${st.label}${st.detail?' — '+st.detail.slice(0,80):''}`, st.success?'ok':'err');
+        }
+        document.getElementById('scProgressBar').style.width = `${completed/totalHosts*100}%`;
+        const elapsed = ((Date.now()-t0)/1000).toFixed(1);
+        document.getElementById('scStatsBar').style.display = 'flex';
+        document.getElementById('scTotal').textContent = completed;
+        document.getElementById('scOk').textContent = okCount;
+        document.getElementById('scErr').textContent = errCount;
+        document.getElementById('scTime').textContent = elapsed + 's';
+        addDeployResult(data);
+      }
+    }
+  } catch(e) { log('system', `✗ ${e.message}`, 'err'); }
+
+  btn.disabled = false; btn.textContent = '🚀 Deploy Script';
+  document.getElementById('scProgressWrap').style.display = 'none';
+}
+
+function addDeployResult(data) {
+  const panel = document.getElementById('scResults');
+  panel.querySelector('.empty-state')?.remove();
+  const id = data.host.replace(/\./g,'_')+'_'+Date.now();
+  const dotCls = data.success ? 'dot-ok' : (data.connected ? 'dot-warn' : 'dot-err');
+  const failStep = !data.success ? (data.steps||[]).filter(s=>!s.success).pop() : null;
+  const sum = data.success ? 'Deployed OK' : (failStep?.label || 'Failed');
+  const stepsHtml = (data.steps||[]).map(s=>`
+    <div class="step-item ${s.success?'step-ok':'step-err'}">
+      <span class="si-icon">${s.success?'✓':'✗'}</span>
+      <div class="si-body">
+        <span class="si-label">${esc(s.label||s.step)}</span>
+        ${s.detail?`<span class="si-detail">${esc(s.detail)}</span>`:''}
+      </div>
+    </div>`).join('');
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  card.innerHTML = `
+    <div class="result-header" onclick="toggleResult('${id}')">
+      <div class="status-dot ${dotCls}"></div>
+      <div class="result-host">${esc(data.host)}</div>
+      <div class="result-sum">${esc(sum)}</div>
+      <div class="result-chev" id="rc-${id}">▶</div>
+    </div>
+    <div class="result-body open" id="rb-${id}">
+      <div class="step-list">${stepsHtml}</div>
+      ${!data.success&&failStep?`<div class="err-banner">${esc(failStep.label)}: ${esc(failStep.detail||'')}</div>`:''}
+    </div>`;
+  panel.appendChild(card);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+// ─── ROMON ────────────────────────────────────────────────────────────────────
+async function romonScan() {
+  const host = document.getElementById('rm_host').value.trim();
+  if (!host) { alert('Enter RoMON proxy host!'); return; }
+  document.getElementById('rmStatus').textContent = '⏳ Scanning...';
+  document.getElementById('rmStatus').style.color = 'var(--yellow)';
+  log('system', `🔍 RoMON scan via ${host}`, 'info');
+  try {
+    const resp = await fetch('/api/romon/scan', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        host, port: document.getElementById('rm_port').value,
+        user: document.getElementById('rm_user').value,
+        password: document.getElementById('rm_pass').value
+      })
+    });
+    const data = await resp.json();
+    if (!data.success) {
+      document.getElementById('rmStatus').textContent = `✗ ${data.error}`;
+      document.getElementById('rmStatus').style.color = 'var(--red)';
+      log('system', `✗ RoMON scan failed: ${data.error}`, 'err');
+      return;
+    }
+    document.getElementById('rmStatus').textContent = `✓ Scan complete`;
+    document.getElementById('rmStatus').style.color = 'var(--green)';
+    log('system', `✓ RoMON scan complete`, 'ok');
+
+    // Show raw output
+    document.getElementById('rmScanResults').style.display = '';
+    document.getElementById('rmRawOutput').textContent = data.output || '(no output)';
+
+    // Show parsed device cards
+    const cards = document.getElementById('rmDeviceCards');
+    cards.innerHTML = '';
+    if (data.neighbours?.length) {
+      data.neighbours.forEach((n, i) => {
+        const ip = n.address || '';
+        const name = n.identity || n.id || `Device ${i+1}`;
+        const mac = n.id || '';
+        log('system', `  ↳ ${name} ${ip ? '— ' + ip : ''} ${mac}`, 'dim');
+        const card = document.createElement('div');
+        card.className = 'rm-device-card';
+        card.innerHTML = `
+          <div class="rm-device-header">
+            <div>
+              <div class="rm-device-name">${esc(name)}</div>
+              ${ip?`<div class="rm-device-meta">${esc(ip)}</div>`:''}
+              ${mac?`<div class="rm-device-meta" style="color:var(--text-3)">${esc(mac)}</div>`:''}
+            </div>
+            <button class="rm-use-btn" onclick="selectRomonDevice('${esc(ip||mac)}','${esc(name)}')">
+              Use as Target →
+            </button>
+          </div>`;
+        cards.appendChild(card);
+      });
+    } else {
+      cards.innerHTML = '<div style="font-size:12px;color:var(--text-3);text-align:center;padding:20px">No RoMON neighbours found.<br>Check that RoMON server is enabled on the proxy router.</div>';
+    }
+
+    document.getElementById('romonNeighSec').style.display = '';
+  } catch(e) {
+    document.getElementById('rmStatus').textContent = `✗ ${e.message}`;
+    document.getElementById('rmStatus').style.color = 'var(--red)';
+    log('system', `✗ ${e.message}`, 'err');
+  }
+}
+
+function selectRomonDevice(ip, name) {
+  document.getElementById('rm_tgt_ip').value = ip;
+  document.getElementById('sc_hosts').value = ip;
+  log('system', `🎯 Target set: ${name} (${ip})`, 'ok');
+  // Switch to script tab
+  sideSwitch('script');
+  document.getElementById('scViaRomon').checked = true;
+  toggleRomonFields();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  setLang(lang); // apply saved lang
+  buildActionList();
+});
+</script>
+</body>
+</html>
